@@ -1,16 +1,50 @@
 import type { MetadataRoute } from "next";
-
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://example.com";
+import { allTitles, getGenres } from "@/content/catalog";
+import { buildCanonical } from "@/lib/seo/urls";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const lastModified = new Date();
+  const now = new Date();
 
-  return [
-    { url: `${siteUrl}/`, lastModified },
-    { url: `${siteUrl}/search`, lastModified },
-    { url: `${siteUrl}/categories`, lastModified },
-    { url: `${siteUrl}/category`, lastModified },
-    { url: `${siteUrl}/detail`, lastModified },
-    { url: `${siteUrl}/disclaimer`, lastModified },
+  const staticPaths = [
+    "/",
+    "/search",
+    "/categories",
+    "/category",
+    "/detail",
+    "/disclaimer",
   ];
+
+  const categorySlugs = [
+    "trending",
+    "indonesian-movies",
+    "indonesian-drama",
+    "kdrama",
+    "short-tv",
+    "anime",
+    "adult-comedy",
+    "western-tv",
+    "indo-dub",
+  ];
+
+  const categorySet = new Set<string>([...categorySlugs, ...getGenres()]);
+  const categoryPaths = Array.from(categorySet).map((genre) => `/category/${genre}`);
+
+  const itemPaths = allTitles.map((item) => ({
+    url: buildCanonical(`/detail/${item.slug}`),
+    lastModified: new Date(item.updatedAt ?? `${item.year}-01-01`),
+  }));
+
+  const urls: MetadataRoute.Sitemap = [
+    ...staticPaths.map((path) => ({
+      url: buildCanonical(path),
+      lastModified: now,
+    })),
+    ...categoryPaths.map((path) => ({
+      url: buildCanonical(path),
+      lastModified: now,
+    })),
+    ...itemPaths,
+  ];
+
+  return urls;
 }

@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
+import Breadcrumbs from "@/components/seo/Breadcrumbs";
 import CategoryView from "@/components/pages/CategoryView";
+import { getDefaultOgImage } from "@/content/catalog";
 import { apiServer } from "@/lib/api/server";
+import { breadcrumbJsonLd } from "@/lib/seo/jsonld";
+import { buildCanonical, toAbsoluteUrl } from "@/lib/seo/urls";
 
 type CategoryPageProps = {
   params: {
@@ -38,18 +42,44 @@ const formatCategory = (category: string) => {
   return cleaned;
 };
 
-export async function generateMetadata({ params }: CategoryPageProps): Promise<Metadata> {
+const parsePageValue = (value?: string | string[]) => {
+  const raw = Array.isArray(value) ? value[0] : value;
+  const page = Number(raw ?? "1") || 1;
+  return page < 1 ? 1 : page;
+};
+
+export async function generateMetadata({
+  params,
+  searchParams,
+}: CategoryPageProps & { searchParams?: { page?: string } }): Promise<Metadata> {
   const appName = process.env.APP_NAME || process.env.NEXT_PUBLIC_APP_NAME || "Rebahan";
   const label = formatCategory(params.category);
   const title = `${label} | ${appName}`;
   const description = `Browse ${label} content on ${appName}.`;
+  const page = parsePageValue(searchParams?.page);
+  const canonicalBase = buildCanonical(`/category/${params.category}`);
+  const canonical = page > 1 ? canonicalBase : canonicalBase;
+  const ogImage = toAbsoluteUrl(getDefaultOgImage());
 
   return {
     title,
     description,
+    alternates: { canonical },
     openGraph: {
       title,
       description,
+      url: canonical,
+      images: [{ url: ogImage }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [ogImage],
+    },
+    robots: {
+      index: page === 1,
+      follow: true,
     },
   };
 }
@@ -59,9 +89,7 @@ type CategoryPageRouteProps = CategoryPageProps & {
 };
 
 const CategoryPage = async ({ params, searchParams }: CategoryPageRouteProps) => {
-  const rawPage = searchParams?.page;
-  const pageValue = Array.isArray(rawPage) ? rawPage[0] : rawPage;
-  const page = Number(pageValue ?? "1") || 1;
+  const page = parsePageValue(searchParams?.page);
   const category = params.category;
   let items: any[] = [];
   let hasMore = false;
@@ -81,14 +109,35 @@ const CategoryPage = async ({ params, searchParams }: CategoryPageRouteProps) =>
     hasMore = false;
   }
 
+  const label = formatCategory(category);
+  const breadcrumbItems = [
+    { name: "Home", url: buildCanonical("/") },
+    { name: label, url: buildCanonical(`/category/${category}`) },
+  ];
+  const breadcrumbLd = breadcrumbJsonLd(breadcrumbItems);
+
   return (
-    <CategoryView
-      activeCategory={category}
-      items={items}
-      hasMore={hasMore}
-      page={page}
-      basePath={`/category/${category}`}
-    />
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
+      />
+      <div className="container">
+        <Breadcrumbs
+          items={[
+            { label: "Home", href: "/" },
+            { label: label },
+          ]}
+        />
+      </div>
+      <CategoryView
+        activeCategory={category}
+        items={items}
+        hasMore={hasMore}
+        page={page}
+        basePath={`/category/${category}`}
+      />
+    </>
   );
 };
 

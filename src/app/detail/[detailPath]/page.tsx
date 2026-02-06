@@ -1,6 +1,12 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import Breadcrumbs from "@/components/seo/Breadcrumbs";
+import RelatedTitles from "@/components/seo/RelatedTitles";
 import DetailClient from "@/components/pages/DetailClient";
+import { allTitles, getTitleBySlug } from "@/content/catalog";
 import { apiServer } from "@/lib/api/server";
+import { breadcrumbJsonLd, episodeJsonLd, movieJsonLd, tvSeriesJsonLd } from "@/lib/seo/jsonld";
+import { buildCanonical, toAbsoluteUrl } from "@/lib/seo/urls";
 
 type DetailPageProps = {
   params: {
@@ -23,22 +29,44 @@ const buildTitle = (detailPath: string) => {
   return cleaned;
 };
 
+const formatGenreLabel = (genre?: string) => {
+  if (!genre) return "Kategori";
+  return genre
+    .split("-")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+};
+
+export async function generateStaticParams() {
+  return allTitles.map((item) => ({ detailPath: item.slug }));
+}
+
 export async function generateMetadata({ params }: DetailPageProps): Promise<Metadata> {
-  const decodedPath = decodeURIComponent(params.detailPath);
   const appName = process.env.APP_NAME || process.env.NEXT_PUBLIC_APP_NAME || "Rebahan";
+  const decodedPath = decodeURIComponent(params.detailPath);
+  const encodedPath = encodeURIComponent(decodedPath);
+  const catalogItem = getTitleBySlug(decodedPath);
   let title = buildTitle(params.detailPath);
-  let description =
-    title === "Detail"
-      ? `Streaming detail page on ${appName}.`
-      : `Watch ${title} on ${appName}.`;
+  let description = title === "Detail" ? `Streaming detail page on ${appName}.` : `Watch ${title} on ${appName}.`;
+  let ogImage: string | undefined;
+  let canonical = buildCanonical(`/detail/${encodedPath}`);
+
+  if (catalogItem) {
+    title = `${catalogItem.title} | ${appName}`;
+    description = catalogItem.description;
+    ogImage = toAbsoluteUrl(catalogItem.posterUrl);
+    canonical = buildCanonical(`/detail/${catalogItem.slug}`);
+  }
 
   try {
-    const data = await apiServer.getDetail(decodedPath);
-    const apiTitle = data?.data?.title;
-    if (apiTitle) {
-      title = `${apiTitle} | ${appName}`;
-      description =
-        data?.data?.description || data?.data?.plot || `Watch ${apiTitle} on ${appName}.`;
+    if (!catalogItem) {
+      const data = await apiServer.getDetail(decodedPath);
+      const apiTitle = data?.data?.title;
+      if (apiTitle) {
+        title = `${apiTitle} | ${appName}`;
+        description = data?.data?.description || data?.data?.plot || `Watch ${apiTitle} on ${appName}.`;
+        ogImage = data?.data?.poster ? toAbsoluteUrl(data.data.poster) : ogImage;
+      }
     }
   } catch {
     // ignore metadata fetch errors
@@ -47,15 +75,29 @@ export async function generateMetadata({ params }: DetailPageProps): Promise<Met
   return {
     title,
     description,
+    alternates: { canonical },
     openGraph: {
       title,
       description,
+      url: canonical,
+      images: ogImage ? [{ url: ogImage }] : undefined,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: ogImage ? [ogImage] : undefined,
     },
   };
 }
 
 const DetailPage = async ({ params }: DetailPageProps) => {
   const decodedPath = decodeURIComponent(params.detailPath);
+  const catalogItem = getTitleBySlug(decodedPath);
+  if (catalogItem?.status === "removed") {
+    notFound();
+  }
+
   let initialDetail = null;
   let initialRecommendations: any[] = [];
 
@@ -74,13 +116,81 @@ const DetailPage = async ({ params }: DetailPageProps) => {
     initialRecommendations = [];
   }
 
+  if (!initialDetail && !catalogItem) {
+    notFound();
+  }
+
+  const breadcrumbItems = [
+    { name: "Home", url: buildCanonical("/") },
+  ];
+  const breadcrumbLinks: Array<{ label: string; href?: string }> = [
+    { label: "Home", href: "/" },
+  ];
+
+  if (catalogItem?.genres?.length) {
+    const primaryGenre = catalogItem.genres[0];
+    breadcrumbItems.push({
+      name: formatGenreLabel(primaryGenre),
+      url: buildCanonical(`/category/${primaryGenre}`),
+    });
+    breadcrumbLinks.push({
+      label: formatGenreLabel(primaryGenre),
+      href: `/category/${primaryGenre}`,
+    });
+  }
+
+  const displayTitle = catalogItem?.title || initialDetail?.title || buildTitle(params.detailPath);
+  breadcrumbItems.push({ name: displayTitle, url: buildCanonical(`/detail/${encodeURIComponent(decodedPath)}`) });
+  breadcrumbLinks.push({ label: displayTitle });
+
+  const jsonLdBlocks: Record<string, unknown>[] = [breadcrumbJsonLd(breadcrumbItems)];
+
+  if (catalogItem?.kind === "movie") {
+    jsonLdBlocks.push(movieJsonLd(catalogItem));
+  }
+
+  if (catalogItem?.kind === "series") {
+    jsonLdBlocks.push(tvSeriesJsonLd(catalogItem));
+    catalogItem.seasons.forEach((season) => {
+      season.episodes.forEach((episode) => {
+        jsonLdBlocks.push(episodeJsonLd(episode, catalogItem));
+      });
+    });
+  }
+
+  if (!catalogItem && initialDetail?.title) {
+    const inferredSeries = Boolean(initialDetail?.seasons?.length || initialDetail?.episodes?.length);
+    const baseJsonLd = {
+      "@context": "https://schema.org",
+      "@type": inferredSeries ? "TVSeries" : "Movie",
+      name: initialDetail.title,
+      description: initialDetail.description || initialDetail.plot,
+      image: initialDetail.poster ? toAbsoluteUrl(initialDetail.poster) : undefined,
+      url: buildCanonical(`/detail/${encodeURIComponent(decodedPath)}`),
+    };
+    jsonLdBlocks.push(baseJsonLd);
+  }
+
   return (
-    <DetailClient
-      detailPath={params.detailPath}
-      initialDetail={initialDetail}
-      initialRecommendations={initialRecommendations}
-      initialDetailPath={params.detailPath}
-    />
+    <>
+      {jsonLdBlocks.map((block, index) => (
+        <script
+          key={`jsonld-${index}`}
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(block) }}
+        />
+      ))}
+      <div className="container">
+        <Breadcrumbs items={breadcrumbLinks} />
+      </div>
+      <DetailClient
+        detailPath={params.detailPath}
+        initialDetail={initialDetail}
+        initialRecommendations={initialRecommendations}
+        initialDetailPath={params.detailPath}
+      />
+      {catalogItem && <RelatedTitles slug={catalogItem.slug} />}
+    </>
   );
 };
 

@@ -16,7 +16,7 @@ const ROUTE_OPTIONS = [
   "/categories",
 ];
 
-const SLOT_NAMES: AdSlotName[] = ["HEADER", "BELOW_PLAYER_NATIVE", "INFEED_NATIVE"];
+const SLOT_NAMES: AdSlotName[] = ["HEADER", "BELOW_PLAYER_NATIVE", "INFEED_BANNER"];
 
 const AdsTestPage = () => {
   const [pathname, setPathname] = useState("/");
@@ -32,12 +32,13 @@ const AdsTestPage = () => {
     return () => window.removeEventListener("resize", updateSize);
   }, []);
 
-  const isMobile = viewportWidth < 768;
   const currentVariant = variant || getVariant();
 
   const slotSummaries = useMemo(
     () =>
       SLOT_NAMES.map((slot) => {
+        const breakpoint = AD_CONFIG.slots[slot].responsive?.breakpoint ?? 768;
+        const isMobile = viewportWidth < breakpoint;
         const keySet = getSlotKeySet(slot, isMobile);
         const key = pickKeyForVariant(keySet, slot, currentVariant) ?? "(missing)";
         const enabled = isSlotEnabled(slot, pathname);
@@ -45,7 +46,7 @@ const AdsTestPage = () => {
         const minHeight = getSlotMinHeight(slot, isMobile);
         return { slot, key, enabled, size, minHeight };
       }),
-    [isMobile, pathname, variant]
+    [pathname, variant, viewportWidth]
   );
 
   return (

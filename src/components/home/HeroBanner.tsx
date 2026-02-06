@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Play, Star } from "lucide-react";
 
@@ -8,6 +9,7 @@ type HeroItem = {
   id?: string | number;
   title?: string;
   poster?: string;
+  posterUrl?: string;
   rating?: string | number;
   year?: string | number;
   type?: string;
@@ -42,11 +44,17 @@ const HeroBanner = ({ items = [] }: HeroBannerProps) => {
   return (
     <div className="heroContainer">
       {items.map((item, index) => (
-        <div
-          key={item.id ?? index}
-          className={`heroSlide ${index === currentIndex ? "active" : ""}`}
-          style={{ backgroundImage: `url(${item.poster})` }}
-        >
+        <div key={item.id ?? index} className={`heroSlide ${index === currentIndex ? "active" : ""}`}>
+          <Image
+            src={item.poster || item.posterUrl || "/placeholder-poster.svg"}
+            alt={item.title || "Hero poster"}
+            width={1600}
+            height={900}
+            priority={index === 0}
+            sizes="100vw"
+            className="heroImage"
+            style={{ width: "100%", height: "100%" }}
+          />
           <div className="heroOverlay">
             <div className="heroContent">
               <h1 className="heroTitle">{item.title}</h1>

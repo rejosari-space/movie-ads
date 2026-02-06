@@ -1,21 +1,33 @@
-"use client";
-
-import { useEffect } from "react";
+import type { Metadata } from "next";
 import { AlertTriangle } from "lucide-react";
+import Breadcrumbs from "@/components/seo/Breadcrumbs";
+import { getDefaultOgImage } from "@/content/catalog";
+import { breadcrumbJsonLd } from "@/lib/seo/jsonld";
+import { buildCanonical, toAbsoluteUrl } from "@/lib/seo/urls";
 
 const DisclaimerPage = () => {
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
+  const canonical = buildCanonical("/disclaimer");
+  const breadcrumbLd = breadcrumbJsonLd([
+    { name: "Home", url: buildCanonical("/") },
+    { name: "Disclaimer", url: canonical },
+  ]);
 
   return (
-    <div className="container disclaimerContainer">
-      <div className="disclaimerHeader">
-        <AlertTriangle size={48} color="var(--primary-color)" />
-        <h1>Disclaimer</h1>
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
+      />
+      <div className="container">
+        <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "Disclaimer" }]} />
       </div>
+      <div className="container disclaimerContainer">
+        <div className="disclaimerHeader">
+          <AlertTriangle size={48} color="var(--primary-color)" />
+          <h1>Disclaimer</h1>
+        </div>
 
-      <div className="disclaimerContent">
+        <div className="disclaimerContent">
         <section>
           <h2>Tentang Konten</h2>
           <p>
@@ -96,8 +108,31 @@ const DisclaimerPage = () => {
           </p>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
+};
+
+const appName = process.env.APP_NAME || process.env.NEXT_PUBLIC_APP_NAME || "Rebahan";
+const description = `Penjelasan resmi penggunaan layanan ${appName}.`;
+const ogImage = toAbsoluteUrl(getDefaultOgImage());
+
+export const metadata: Metadata = {
+  title: `Disclaimer | ${appName}`,
+  description,
+  alternates: { canonical: buildCanonical("/disclaimer") },
+  openGraph: {
+    title: `Disclaimer | ${appName}`,
+    description,
+    url: buildCanonical("/disclaimer"),
+    images: [{ url: ogImage }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `Disclaimer | ${appName}`,
+    description,
+    images: [ogImage],
+  },
 };
 
 export default DisclaimerPage;

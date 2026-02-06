@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { Star } from "lucide-react";
 
@@ -5,6 +6,7 @@ type Movie = {
   id?: string | number;
   detailPath?: string;
   poster?: string;
+  posterUrl?: string;
   title?: string;
   rating?: string | number;
   year?: string | number;
@@ -17,10 +19,19 @@ type MovieCardProps = {
 
 const MovieCard = ({ movie }: MovieCardProps) => {
   const detailSlug = movie.detailPath ? encodeURIComponent(movie.detailPath) : "";
+  const posterSrc = movie.posterUrl || movie.poster || "/placeholder-poster.svg";
   return (
     <Link href={`/detail/${detailSlug}`} className="movieCard">
       <div className="posterWrapper">
-        <img src={movie.poster} alt={movie.title} className="posterImage" loading="lazy" />
+        <Image
+          src={posterSrc}
+          alt={movie.title || "Poster"}
+          className="posterImage"
+          width={300}
+          height={450}
+          sizes="(max-width: 600px) 45vw, (max-width: 900px) 30vw, (max-width: 1200px) 20vw, 200px"
+          loading="lazy"
+        />
         <div className="ratingBadge">
           <Star size={12} fill="#fbbf24" stroke="none" />
           {movie.rating}

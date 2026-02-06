@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import Image from "next/image";
 import { Calendar, Film, Star } from "lucide-react";
 import AdSlot from "@/components/ads/AdSlot";
 import PrePlayGate from "@/components/affiliate/PrePlayGate";
@@ -260,16 +261,38 @@ const DetailClient = ({
                     episodesToRender = detail.episodes;
                   }
 
-                  return episodesToRender.map((ep: any, idx: number) => (
-                    <button
-                      key={idx}
-                      onClick={() => handleEpisodePlay(ep.playerUrl)}
-                      className={`episodeBtn sidebar-btn ${currentVideoUrl === ep.playerUrl ? "active" : ""}`}
-                    >
-                      <span className="ep-num">{idx + 1}</span>
-                      <span className="ep-title">{ep.title || `Episode ${ep.episode || idx + 1}`}</span>
-                    </button>
-                  ));
+                  const splitIndex = 6;
+                  const shouldInsertAd = episodesToRender.length > splitIndex;
+                  const firstBlock = episodesToRender.slice(0, splitIndex);
+                  const restBlock = episodesToRender.slice(splitIndex);
+
+                  return (
+                    <>
+                      {firstBlock.map((ep: any, idx: number) => (
+                        <button
+                          key={idx}
+                          onClick={() => handleEpisodePlay(ep.playerUrl)}
+                          className={`episodeBtn sidebar-btn ${currentVideoUrl === ep.playerUrl ? "active" : ""}`}
+                        >
+                          <span className="ep-num">{idx + 1}</span>
+                          <span className="ep-title">{ep.title || `Episode ${ep.episode || idx + 1}`}</span>
+                        </button>
+                      ))}
+                      {shouldInsertAd && (
+                        <AdSlot slot="INFEED_BANNER" className="ad-infeed ad-episode" />
+                      )}
+                      {restBlock.map((ep: any, idx: number) => (
+                        <button
+                          key={idx + splitIndex}
+                          onClick={() => handleEpisodePlay(ep.playerUrl)}
+                          className={`episodeBtn sidebar-btn ${currentVideoUrl === ep.playerUrl ? "active" : ""}`}
+                        >
+                          <span className="ep-num">{idx + splitIndex + 1}</span>
+                          <span className="ep-title">{ep.title || `Episode ${ep.episode || idx + splitIndex + 1}`}</span>
+                        </button>
+                      ))}
+                    </>
+                  );
                 })()}
               </div>
 
@@ -279,7 +302,15 @@ const DetailClient = ({
       )}
 
       <div className="detailHeader">
-        <img src={detail.poster} alt={detail.title} className="detailPoster" />
+        <Image
+          src={detail.poster || detail.posterUrl || "/placeholder-poster.svg"}
+          alt={detail.title || "Poster"}
+          className="detailPoster"
+          width={500}
+          height={750}
+          sizes="(max-width: 768px) 60vw, 250px"
+          priority
+        />
         <div className="detailInfo">
           <h1 className="detailTitle">{detail.title}</h1>
           <div className="detailMeta">

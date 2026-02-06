@@ -1,22 +1,59 @@
 import type { Metadata } from "next";
+import Breadcrumbs from "@/components/seo/Breadcrumbs";
 import CategoryView from "@/components/pages/CategoryView";
+import { getDefaultOgImage } from "@/content/catalog";
 import { apiServer } from "@/lib/api/server";
+import { breadcrumbJsonLd } from "@/lib/seo/jsonld";
+import { buildCanonical, toAbsoluteUrl } from "@/lib/seo/urls";
 
 const appName = process.env.APP_NAME || process.env.NEXT_PUBLIC_APP_NAME || "Rebahan";
 
-export const metadata: Metadata = {
-  title: `Trending | ${appName}`,
-  description: `Browse trending movies and series on ${appName}.`,
+const parsePageValue = (value?: string | string[]) => {
+  const raw = Array.isArray(value) ? value[0] : value;
+  const page = Number(raw ?? "1") || 1;
+  return page < 1 ? 1 : page;
 };
+
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams?: { page?: string };
+}): Promise<Metadata> {
+  const title = `Trending | ${appName}`;
+  const description = `Browse trending movies and series on ${appName}.`;
+  const page = parsePageValue(searchParams?.page);
+  const canonical = buildCanonical("/category");
+  const ogImage = toAbsoluteUrl(getDefaultOgImage());
+
+  return {
+    title,
+    description,
+    alternates: { canonical },
+    openGraph: {
+      title,
+      description,
+      url: canonical,
+      images: [{ url: ogImage }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [ogImage],
+    },
+    robots: {
+      index: page === 1,
+      follow: true,
+    },
+  };
+}
 
 type CategoryIndexPageProps = {
   searchParams?: { page?: string };
 };
 
 const CategoryIndexPage = async ({ searchParams }: CategoryIndexPageProps) => {
-  const rawPage = searchParams?.page;
-  const pageValue = Array.isArray(rawPage) ? rawPage[0] : rawPage;
-  const page = Number(pageValue ?? "1") || 1;
+  const page = parsePageValue(searchParams?.page);
   let items: any[] = [];
   let hasMore = false;
 
@@ -29,14 +66,29 @@ const CategoryIndexPage = async ({ searchParams }: CategoryIndexPageProps) => {
     hasMore = false;
   }
 
+  const breadcrumbItems = [
+    { name: "Home", url: buildCanonical("/") },
+    { name: "Trending", url: buildCanonical("/category") },
+  ];
+  const breadcrumbLd = breadcrumbJsonLd(breadcrumbItems);
+
   return (
-    <CategoryView
-      activeCategory="trending"
-      items={items}
-      hasMore={hasMore}
-      page={page}
-      basePath="/category"
-    />
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
+      />
+      <div className="container">
+        <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "Trending" }]} />
+      </div>
+      <CategoryView
+        activeCategory="trending"
+        items={items}
+        hasMore={hasMore}
+        page={page}
+        basePath="/category"
+      />
+    </>
   );
 };
 

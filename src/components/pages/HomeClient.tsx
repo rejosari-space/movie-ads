@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import AdSlot from "@/components/ads/AdSlot";
 import MovieCard from "@/components/common/MovieCard";
 import { SectionSkeleton } from "@/components/common/Skeleton";
@@ -36,23 +37,37 @@ const HomeClient = ({ trending, sections, hasData }: HomeClientProps) => {
     <div>
       {trending.length > 0 && <HeroBanner items={trending.slice(0, 5)} />}
 
-      <div className="container" style={{ marginTop: "10px" }}>
-        <AdSlot slot="INFEED_NATIVE" className="ad-infeed" />
-      </div>
+      {(() => {
+        let infeedInserted = false;
 
-      {Object.entries(sections).map(([key, section]) =>
-        section.loading ? (
-          <SectionSkeleton key={key} />
-        ) : (
-          section.data.length > 0 && (
+        return Object.entries(sections).map(([key, section]) => {
+          if (section.loading) {
+            return <SectionSkeleton key={key} />;
+          }
+
+          if (section.data.length === 0) return null;
+
+          const items = section.data.slice(0, 10);
+          const cards: ReactNode[] = items.map((item: any) => (
+            <MovieCard key={item.id} movie={item} />
+          ));
+
+          if (!infeedInserted && items.length >= 6) {
+            cards.splice(
+              6,
+              0,
+              <AdSlot key={`infeed-banner-${key}`} slot="INFEED_BANNER" className="ad-infeed grid-ad" />
+            );
+            infeedInserted = true;
+          }
+
+          return (
             <Section key={key} title={section.title} linkTo={section.link}>
-              {section.data.slice(0, 10).map((item: any) => (
-                <MovieCard key={item.id} movie={item} />
-              ))}
+              {cards}
             </Section>
-          )
-        )
-      )}
+          );
+        });
+      })()}
     </div>
   );
 };

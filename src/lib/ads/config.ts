@@ -35,6 +35,8 @@ const BASE_PATH =
 const headerDesktopKeys = parseKeySet(process.env.NEXT_PUBLIC_ADSTERRA_HEADER_728_KEY);
 const headerMobileKeys = parseKeySet(process.env.NEXT_PUBLIC_ADSTERRA_MOBILE_320_KEY);
 const nativeKeys = parseKeySet(process.env.NEXT_PUBLIC_ADSTERRA_NATIVE_KEY);
+const banner300Keys = parseKeySet(process.env.NEXT_PUBLIC_ADSTERRA_BANNER_300_KEY);
+const banner160Keys = parseKeySet(process.env.NEXT_PUBLIC_ADSTERRA_BANNER_160x600_KEY);
 
 export const ADSTERRA_BANNER_SCRIPT_BASE =
   process.env.NEXT_PUBLIC_ADSTERRA_BANNER_SCRIPT_BASE || "https://www.topcreativeformat.com/";
@@ -44,6 +46,8 @@ export const ADSTERRA_NATIVE_SCRIPT_BASE =
 
 const headerDesktopSize: AdSize = { width: 728, height: 90 };
 const headerMobileSize: AdSize = { width: 320, height: 50 };
+const bannerMobileSize: AdSize = { width: 300, height: 250 };
+const bannerDesktopSize: AdSize = { width: 160, height: 600 };
 
 const HEADER_CONFIG: AdSlotConfig = {
   slot: "HEADER",
@@ -71,12 +75,19 @@ const BELOW_PLAYER_CONFIG: AdSlotConfig = {
 };
 
 const INFEED_CONFIG: AdSlotConfig = {
-  slot: "INFEED_NATIVE",
+  slot: "INFEED_BANNER",
   provider: "adsterra",
   label: "Iklan",
-  minHeight: 120,
-  placement: "In-feed",
-  keys: nativeKeys,
+  minHeight: bannerMobileSize.height,
+  placement: "In-feed banner",
+  keys: banner300Keys,
+  responsive: {
+    breakpoint: 1024,
+    desktop: bannerDesktopSize,
+    mobile: bannerMobileSize,
+    desktopKeys: banner160Keys,
+    mobileKeys: banner300Keys,
+  },
 };
 
 export const AD_CONFIG: AdSystemConfig = {
@@ -86,17 +97,25 @@ export const AD_CONFIG: AdSystemConfig = {
   slots: {
     HEADER: HEADER_CONFIG,
     BELOW_PLAYER_NATIVE: BELOW_PLAYER_CONFIG,
-    INFEED_NATIVE: INFEED_CONFIG,
+    INFEED_BANNER: INFEED_CONFIG,
   },
+};
+
+export const hasKeySet = (keySet: AdKeySet | undefined | null) => {
+  if (!keySet) return false;
+  return keySet.A.length > 0 || keySet.B.length > 0;
 };
 
 export const getSlotKeySet = (slot: AdSlotName, isMobile: boolean): AdKeySet => {
   const config = AD_CONFIG.slots[slot];
   if (config.responsive) {
-    if (isMobile) {
-      return config.responsive.mobileKeys ?? config.keys;
+    const preferred = isMobile
+      ? config.responsive.mobileKeys ?? config.keys
+      : config.responsive.desktopKeys ?? config.keys;
+    if (!hasKeySet(preferred)) {
+      return config.keys;
     }
-    return config.responsive.desktopKeys ?? config.keys;
+    return preferred;
   }
   return config.keys;
 };
@@ -104,6 +123,9 @@ export const getSlotKeySet = (slot: AdSlotName, isMobile: boolean): AdKeySet => 
 export const getSlotSize = (slot: AdSlotName, isMobile: boolean): AdSize | null => {
   const config = AD_CONFIG.slots[slot];
   if (!config.responsive) return null;
+  if (!isMobile && config.responsive.desktopKeys && !hasKeySet(config.responsive.desktopKeys)) {
+    return config.responsive.mobile;
+  }
   return isMobile ? config.responsive.mobile : config.responsive.desktop;
 };
 

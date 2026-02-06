@@ -1,14 +1,21 @@
 import type { MetadataRoute } from "next";
-
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://example.com";
+import { buildCanonical, withBasePath } from "@/lib/seo/urls";
 
 export default function robots(): MetadataRoute.Robots {
+  const disallow = [
+    withBasePath("/api/"),
+    withBasePath("/seo-debug"),
+    withBasePath("/ads-test"),
+    withBasePath("/affiliate-test"),
+    withBasePath("/adblock-test"),
+  ];
+
   return {
     rules: {
       userAgent: "*",
-      allow: "/",
-      disallow: ["/api/"],
+      allow: withBasePath("/"),
+      disallow,
     },
-    sitemap: `${siteUrl}/sitemap.xml`,
+    sitemap: buildCanonical("/sitemap.xml"),
   };
 }

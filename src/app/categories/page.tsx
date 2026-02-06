@@ -1,13 +1,40 @@
-"use client";
-
-import { useEffect, type CSSProperties } from "react";
+import type { CSSProperties } from "react";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Film, Globe, Heart, Languages, Laugh, Popcorn, Sparkles, TrendingUp, Tv } from "lucide-react";
+import Breadcrumbs from "@/components/seo/Breadcrumbs";
+import { getDefaultOgImage } from "@/content/catalog";
+import { breadcrumbJsonLd } from "@/lib/seo/jsonld";
+import { buildCanonical, toAbsoluteUrl } from "@/lib/seo/urls";
+
+const appName = process.env.APP_NAME || process.env.NEXT_PUBLIC_APP_NAME || "Rebahan";
+const description = `Jelajahi semua kategori konten di ${appName}.`;
+const canonical = buildCanonical("/categories");
+const ogImage = toAbsoluteUrl(getDefaultOgImage());
+
+export const metadata: Metadata = {
+  title: `Categories | ${appName}`,
+  description,
+  alternates: { canonical },
+  openGraph: {
+    title: `Categories | ${appName}`,
+    description,
+    url: canonical,
+    images: [{ url: ogImage }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `Categories | ${appName}`,
+    description,
+    images: [ogImage],
+  },
+};
 
 const CategoriesPage = () => {
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
+  const breadcrumbLd = breadcrumbJsonLd([
+    { name: "Home", url: buildCanonical("/") },
+    { name: "Categories", url: canonical },
+  ]);
 
   const categories = [
     {
@@ -76,32 +103,41 @@ const CategoriesPage = () => {
   ];
 
   return (
-    <div className="container categoriesContainer">
-      <div className="categoriesHeader">
-        <h1>All Categories</h1>
-        <p>Jelajahi semua kategori konten yang tersedia</p>
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
+      />
+      <div className="container">
+        <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "Categories" }]} />
       </div>
+      <div className="container categoriesContainer">
+        <div className="categoriesHeader">
+          <h1>All Categories</h1>
+          <p>Jelajahi semua kategori konten yang tersedia</p>
+        </div>
 
-      <div className="categoriesGrid">
-        {categories.map((category, idx) => {
-          const Icon = category.icon;
-          return (
-            <Link
-              key={idx}
-              href={category.path}
-              className="categoryCard"
-              style={{ "--category-color": category.color } as CSSProperties}
-            >
-              <div className="categoryIcon">
-                <Icon size={40} />
-              </div>
-              <h3>{category.name}</h3>
-              <p>{category.description}</p>
-            </Link>
-          );
-        })}
+        <div className="categoriesGrid">
+          {categories.map((category, idx) => {
+            const Icon = category.icon;
+            return (
+              <Link
+                key={idx}
+                href={category.path}
+                className="categoryCard"
+                style={{ "--category-color": category.color } as CSSProperties}
+              >
+                <div className="categoryIcon">
+                  <Icon size={40} />
+                </div>
+                <h3>{category.name}</h3>
+                <p>{category.description}</p>
+              </Link>
+            );
+          })}
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

@@ -27,7 +27,7 @@ type AdSlotProps = {
   forcePathname?: string;
 };
 
-const BREAKPOINT = 768;
+const FALLBACK_BREAKPOINT = 768;
 
 const AdSlot = ({ slot, className, showLabel = true, forcePathname }: AdSlotProps) => {
   const pathname = usePathname() ?? "/";
@@ -37,22 +37,24 @@ const AdSlot = ({ slot, className, showLabel = true, forcePathname }: AdSlotProp
 
   const [isMobile, setIsMobile] = useState(false);
 
+  const slotConfig = AD_CONFIG.slots[slot];
+  const responsiveBreakpoint = slotConfig.responsive?.breakpoint ?? FALLBACK_BREAKPOINT;
+
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth < BREAKPOINT);
+      setIsMobile(window.innerWidth < responsiveBreakpoint);
     };
 
     handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  }, [responsiveBreakpoint]);
 
   const enabled = useMemo(
     () => isSlotEnabled(slot, resolvedPathname),
     [slot, resolvedPathname]
   );
 
-  const slotConfig = AD_CONFIG.slots[slot];
   const keySet = getSlotKeySet(slot, isMobile);
   const size = getSlotSize(slot, isMobile);
   const minHeight = getSlotMinHeight(slot, isMobile);
@@ -99,9 +101,11 @@ const AdSlot = ({ slot, className, showLabel = true, forcePathname }: AdSlotProp
     const container = containerRef.current;
     if (!container) return;
 
-    if (slot === "HEADER") {
+    const isBannerSlot = slot === "HEADER" || slot === "INFEED_BANNER";
+    if (isBannerSlot) {
       const height = slotSize?.height ?? minHeight;
-      const width = slotSize?.width ?? 728;
+      const fallbackWidth = slot === "HEADER" ? 728 : 300;
+      const width = slotSize?.width ?? fallbackWidth;
       (window as typeof window & { atOptions?: Record<string, unknown> }).atOptions = {
         key: activeKey,
         format: "iframe",

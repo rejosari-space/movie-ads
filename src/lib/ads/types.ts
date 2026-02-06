@@ -1,4 +1,4 @@
-export type AdSlotName = "HEADER" | "BELOW_PLAYER_NATIVE" | "INFEED_NATIVE";
+export type AdSlotName = "HEADER" | "BELOW_PLAYER_NATIVE" | "INFEED_BANNER";
 
 export type AdVariant = "A" | "B";
 

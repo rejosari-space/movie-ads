@@ -13,8 +13,8 @@ const SLOT_RULES: Record<AdSlotName, SlotRule> = {
   BELOW_PLAYER_NATIVE: {
     allow: ["/film/*", "/detail/*"],
   },
-  INFEED_NATIVE: {
-    allow: ["/", "/genre/*", "/search"],
+  INFEED_BANNER: {
+    allow: ["/", "/search", "/detail/*"],
   },
 };
 

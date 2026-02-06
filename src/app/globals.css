@@ -248,6 +248,11 @@ img {
   z-index: 1;
 }
 
+.heroImage {
+  object-fit: cover;
+  z-index: 1;
+}
+
 .heroSlide.active {
   opacity: 1;
   z-index: 2;
@@ -262,6 +267,7 @@ img {
   background: linear-gradient(to right, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.5) 50%, transparent 100%);
   display: flex;
   align-items: center;
+  z-index: 2;
 }
 
 .heroContent {
@@ -632,6 +638,49 @@ img {
   padding-bottom: 10px;
   scrollbar-width: thin;
   scrollbar-color: var(--primary-color) rgba(255, 255, 255, 0.1);
+}
+
+/* Breadcrumbs */
+.breadcrumbs {
+  margin: 12px 0 18px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.breadcrumbs ol {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0;
+  margin: 0;
+}
+
+.breadcrumbs li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.breadcrumbs li::after {
+  content: "/";
+  opacity: 0.5;
+}
+
+.breadcrumbs li:last-child::after {
+  content: "";
+}
+
+.breadcrumbs a {
+  color: var(--text-secondary);
+}
+
+.breadcrumbs a:hover {
+  color: var(--text-primary);
+}
+
+.related-section {
+  margin-top: 40px;
 }
 
 .categoryTabs::-webkit-scrollbar {
@@ -1105,6 +1154,83 @@ img {
 
 .ad-below-player {
   margin-top: 16px;
+}
+
+.grid-ad {
+  grid-column: 1 / -1;
+}
+
+.ad-episode {
+  margin: 8px 0;
+}
+
+.adblock-gate {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  z-index: 3000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  backdrop-filter: blur(4px);
+}
+
+.adblock-card {
+  width: 100%;
+  max-width: 520px;
+  background: var(--surface-color);
+  border-radius: 10px;
+  padding: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.55);
+}
+
+.adblock-card h2 {
+  margin: 0 0 10px;
+  font-size: 1.4rem;
+}
+
+.adblock-card p {
+  margin: 0 0 16px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.adblock-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.adblock-secondary {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.adblock-tertiary {
+  background: transparent;
+  border: 1px dashed rgba(255, 255, 255, 0.2);
+  color: var(--text-secondary);
+}
+
+.adblock-help {
+  margin-top: 14px;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.adblock-help ul {
+  margin: 8px 0 0;
+  padding-left: 18px;
+}
+
+.adblock-help li {
+  margin-bottom: 6px;
 }
 
 /* Skeletons */

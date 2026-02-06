@@ -1,5 +1,34 @@
+import type { Metadata } from "next";
 import HomeClient from "@/components/pages/HomeClient";
 import { apiServer } from "@/lib/api/server";
+import { getDefaultOgImage } from "@/content/catalog";
+import { websiteJsonLd } from "@/lib/seo/jsonld";
+import { buildCanonical, toAbsoluteUrl } from "@/lib/seo/urls";
+
+const appName = process.env.APP_NAME || process.env.NEXT_PUBLIC_APP_NAME || "Rebahan";
+const description =
+  `${appName} adalah hub streaming film dan series dengan koleksi pilihan dan update terbaru.`;
+const canonical = buildCanonical("/");
+const ogImage = toAbsoluteUrl(getDefaultOgImage());
+
+export const metadata: Metadata = {
+  title: appName,
+  description,
+  alternates: { canonical },
+  openGraph: {
+    type: "website",
+    url: canonical,
+    title: appName,
+    description,
+    images: [{ url: ogImage }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: appName,
+    description,
+    images: [ogImage],
+  },
+};
 
 const HomePage = async () => {
   const sections = {
@@ -43,7 +72,17 @@ const HomePage = async () => {
     trending.length > 0 ||
     Object.values(sections).some((section) => Array.isArray(section.data) && section.data.length > 0);
 
-  return <HomeClient trending={trending} sections={sections} hasData={hasData} />;
+  const jsonLd = websiteJsonLd(appName);
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <HomeClient trending={trending} sections={sections} hasData={hasData} />
+    </>
+  );
 };
 
 export default HomePage;

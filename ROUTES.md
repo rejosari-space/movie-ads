@@ -4,8 +4,11 @@
 
 - `/` -> `src/app/page.tsx`
 - `/ads-test` -> `src/app/ads-test/page.tsx`
+- `/adblock-test` -> `src/app/adblock-test/page.tsx`
 - `/affiliate-test` -> `src/app/affiliate-test/page.tsx`
 - `/search` -> `src/app/search/page.tsx`
+- `/feed.xml` -> `src/app/feed.xml/route.ts`
+- `/seo-debug` -> `src/app/seo-debug/page.tsx` (dev-only)
 - `/go/shopee` -> `src/app/go/shopee/route.ts`
 - `/detail` -> `src/app/detail/page.tsx`
 - `/detail/[detailPath]` -> `src/app/detail/[detailPath]/page.tsx`

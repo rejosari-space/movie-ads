@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import AdSlot from "@/components/ads/AdSlot";
 import MovieCard from "@/components/common/MovieCard";
 import { SectionSkeleton } from "@/components/common/Skeleton";
 import { api } from "@/services/api";
@@ -39,9 +40,17 @@ const SearchClient = () => {
         <SectionSkeleton />
       ) : (
         <div className="grid">
-          {results.length > 0 ? (
-            results.map((item) => <MovieCard key={item.id} movie={item} />)
-          ) : (
+          {results.length > 0 ? (() => {
+            const cards = results.map((item) => <MovieCard key={item.id} movie={item} />);
+            if (results.length >= 5) {
+              cards.splice(
+                5,
+                0,
+                <AdSlot key="infeed-banner-search" slot="INFEED_BANNER" className="ad-infeed grid-ad" />
+              );
+            }
+            return cards;
+          })() : (
             <p style={{ color: "var(--text-secondary)" }}>No results found.</p>
           )}
         </div>
