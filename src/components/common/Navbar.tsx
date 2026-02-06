@@ -39,7 +39,7 @@ const Navbar = () => {
     <nav className="navbar">
       <Link href="/" className="logo">
         <Image
-          src="/logo.png"
+          src="/logo.svg"
           alt={appName}
           className="navbar-logo-img"
           width={40}

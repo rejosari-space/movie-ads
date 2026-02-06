@@ -15,7 +15,7 @@ export const getSiteOrigin = () => {
 export const getBasePath = () =>
   process.env.NEXT_PUBLIC_BASE_PATH ||
   process.env.NEXT_PUBLIC_ADS_BASE_PATH ||
-  "/film";
+  "/";
 
 export const normalizePath = (path: string) => {
   if (!path) return "/";

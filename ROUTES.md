@@ -1,6 +1,6 @@
 # Routes
 
-- Base path: `/film` (all routes are served under `/film/*`)
+- Base path: `/` (no basePath)
 
 - `/` -> `src/app/page.tsx`
 - `/ads-test` -> `src/app/ads-test/page.tsx`

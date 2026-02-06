@@ -13,7 +13,7 @@
 10. Optional loader URL: `NEXT_PUBLIC_ADSTERRA_SCRIPT_SRC=YOUR_LOADER_URL`
 11. Optional banner script base: `NEXT_PUBLIC_ADSTERRA_BANNER_SCRIPT_BASE=https://www.topcreativeformat.com/`
 12. Optional native script base: `NEXT_PUBLIC_ADSTERRA_NATIVE_SCRIPT_BASE=https://plXXXX.effectivegatecpm.com/`
-13. Optional base path for rules: `NEXT_PUBLIC_ADS_BASE_PATH=/film`
+13. Optional base path for rules: `NEXT_PUBLIC_ADS_BASE_PATH=/`
 
 **Key Format**
 1. Single key: `KEY123`

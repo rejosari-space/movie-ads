@@ -30,7 +30,7 @@ const ADSTERRA_ENABLED = toBoolean(process.env.NEXT_PUBLIC_ADSTERRA_ENABLED);
 const BASE_PATH =
   process.env.NEXT_PUBLIC_BASE_PATH ||
   process.env.NEXT_PUBLIC_ADS_BASE_PATH ||
-  "/film";
+  "/";
 
 const headerDesktopKeys = parseKeySet(process.env.NEXT_PUBLIC_ADSTERRA_HEADER_728_KEY);
 const headerMobileKeys = parseKeySet(process.env.NEXT_PUBLIC_ADSTERRA_MOBILE_320_KEY);

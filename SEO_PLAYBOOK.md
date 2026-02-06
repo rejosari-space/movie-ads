@@ -20,7 +20,7 @@
 
 ## Sitemap Submission (Google Search Console)
 1. Verify your domain in Search Console.
-2. Submit your sitemap URL: `/film/sitemap.xml` (or `/sitemap.xml` if basePath is removed).
+2. Submit your sitemap URL: `/sitemap.xml` (or `/film/sitemap.xml` if you use basePath).
 3. Monitor indexing coverage and fix any reported errors.
 
 ## Content Strategy Basics
