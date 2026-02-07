@@ -25,7 +25,7 @@ const stripBasePath = (pathname: string) => {
   return pathname;
 };
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const normalizedPath = stripBasePath(request.nextUrl.pathname);
 
   if (normalizedPath.startsWith("/detail/")) {
