@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Play, Star } from "lucide-react";
+import ImageWithFallback from "@/components/common/ImageWithFallback";
 
 type HeroItem = {
   id?: string | number;
@@ -45,7 +45,7 @@ const HeroBanner = ({ items = [] }: HeroBannerProps) => {
     <div className="heroContainer">
       {items.map((item, index) => (
         <div key={item.id ?? index} className={`heroSlide ${index === currentIndex ? "active" : ""}`}>
-          <Image
+          <ImageWithFallback
             src={item.poster || item.posterUrl || "/placeholder-poster.svg"}
             alt={item.title || "Hero poster"}
             width={1600}

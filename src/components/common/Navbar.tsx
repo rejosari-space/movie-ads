@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Menu, Search, X } from "lucide-react";
 import { api } from "@/services/api";
+import ImageWithFallback from "@/components/common/ImageWithFallback";
 
 type SuggestionItem = {
   id?: string | number;
@@ -181,7 +182,7 @@ const Navbar = () => {
                     }}
                   >
                     <span className="searchSuggestionPoster">
-                      <Image src={posterSrc} alt={item.title || "Poster"} width={44} height={66} />
+                      <ImageWithFallback src={posterSrc} alt={item.title || "Poster"} width={44} height={66} />
                     </span>
                     <span className="searchSuggestionMeta">
                       <span className="searchSuggestionTitle">{item.title || "Untitled"}</span>

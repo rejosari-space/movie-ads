@@ -2,13 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
-import Image from "next/image";
 import { Calendar, Film, Star } from "lucide-react";
 import AdSlot from "@/components/ads/AdSlot";
 import MovieCard from "@/components/common/MovieCard";
 import DetailSkeleton from "@/components/common/DetailSkeleton";
 import VideoPlayer from "@/components/player/VideoPlayer";
 import { triggerPopunder } from "@/lib/ads/popunder";
+import ImageWithFallback from "@/components/common/ImageWithFallback";
 
 type DetailClientProps = {
   detailPath?: string | null;
@@ -317,7 +317,7 @@ const DetailClient = ({
       )}
 
       <div className="detailHeader">
-        <Image
+        <ImageWithFallback
           src={detail.poster || detail.posterUrl || "/placeholder-poster.svg"}
           alt={detail.title || "Poster"}
           className="detailPoster"

@@ -1,6 +1,6 @@
-import Image from "next/image";
 import Link from "next/link";
 import { Star } from "lucide-react";
+import ImageWithFallback from "@/components/common/ImageWithFallback";
 
 type Movie = {
   id?: string | number;
@@ -23,7 +23,7 @@ const MovieCard = ({ movie }: MovieCardProps) => {
   return (
     <Link href={`/detail/${detailSlug}`} className="movieCard">
       <div className="posterWrapper">
-        <Image
+        <ImageWithFallback
           src={posterSrc}
           alt={movie.title || "Poster"}
           className="posterImage"
