@@ -60,15 +60,18 @@ const CategoryClient = () => {
       setCategoryData({ data: [], loading: true, hasMore: true, page: 1 });
       try {
         const currentCat = categories.find((c) => c.id === activeCategory);
-        if (currentCat && currentCat.api) {
-          const res = await currentCat.api(1);
-          setCategoryData({
-            data: res?.items || [],
-            loading: false,
-            hasMore: res?.hasMore !== false,
-            page: 1,
-          });
+        if (!currentCat || !currentCat.api) {
+          setCategoryData({ data: [], loading: false, hasMore: false, page: 1 });
+          return;
         }
+
+        const res = await currentCat.api(1);
+        setCategoryData({
+          data: res?.items || [],
+          loading: false,
+          hasMore: res?.hasMore !== false,
+          page: 1,
+        });
       } catch (e) {
         console.error("Failed to fetch category", e);
         setCategoryData((prev) => ({ ...prev, loading: false }));
@@ -103,6 +106,7 @@ const CategoryClient = () => {
   }, [categoryData.page, activeCategory]);
 
   const handleCategoryChange = (categoryId: string) => {
+    if (categoryId === activeCategory) return;
     setActiveCategory(categoryId);
     router.push(`/category/${categoryId}`);
     window.scrollTo(0, 0);
