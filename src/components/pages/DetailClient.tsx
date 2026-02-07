@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import Image from "next/image";
 import { Calendar, Film, Star } from "lucide-react";
@@ -17,6 +17,12 @@ type DetailClientProps = {
   initialDetailPath?: string | null;
 };
 
+const isValidDetail = (value: any) => {
+  if (!value || typeof value !== "object") return false;
+  if (!value.title) return false;
+  return true;
+};
+
 const DetailClient = ({
   detailPath,
   initialDetail = null,
@@ -29,8 +35,8 @@ const DetailClient = ({
     : (params?.detailPath as string | undefined);
   const resolvedDetailPath = detailPath ?? paramDetailPath ?? null;
 
-  const [detail, setDetail] = useState<any>(initialDetail);
-  const [loading, setLoading] = useState(!initialDetail);
+  const [detail, setDetail] = useState<any>(isValidDetail(initialDetail) ? initialDetail : null);
+  const [loading, setLoading] = useState(!isValidDetail(initialDetail));
   const [error, setError] = useState<string | null>(null);
   const [activeSeason, setActiveSeason] = useState(1);
   const [currentVideoUrl, setCurrentVideoUrl] = useState<string | null>(null);
@@ -39,12 +45,16 @@ const DetailClient = ({
   const [pendingUrl, setPendingUrl] = useState<string | null>(null);
   const [pendingType, setPendingType] = useState<"movie" | "series">("movie");
   const [pendingSeriesId, setPendingSeriesId] = useState<string | null>(null);
+  const lastFetchRef = useRef<string | null>(null);
 
   const hasInitial = Boolean(initialDetail) && initialDetailPath === resolvedDetailPath;
 
   useEffect(() => {
     if (hasInitial) {
-      setDetail(initialDetail);
+      if (isValidDetail(initialDetail)) {
+        setDetail(initialDetail);
+        setError(null);
+      }
       setRecommendations(initialRecommendations);
       setLoading(false);
     }
@@ -55,10 +65,44 @@ const DetailClient = ({
     if (!resolvedDetailPath) {
       setError("Detail tidak ditemukan.");
     }
-    if (!initialDetail) {
-      setLoading(false);
-    }
   }, [resolvedDetailPath, initialDetail]);
+
+  useEffect(() => {
+    if (!resolvedDetailPath) return;
+    if (isValidDetail(detail)) return;
+    if (lastFetchRef.current === resolvedDetailPath) return;
+
+    let active = true;
+    lastFetchRef.current = resolvedDetailPath;
+    const fetchDetail = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch(
+          `/api/stream?action=detail&detailPath=${encodeURIComponent(resolvedDetailPath)}`,
+          { cache: "no-store" }
+        );
+        const data = await res.json();
+        const candidate = data?.data || data?.items?.[0] || null;
+        if (active && isValidDetail(candidate)) {
+          setDetail(candidate);
+          setError(null);
+        } else if (active) {
+          setError("Detail tidak ditemukan.");
+        }
+      } catch {
+        if (active) {
+          setError("Gagal memuat detail.");
+        }
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+
+    fetchDetail();
+    return () => {
+      active = false;
+    };
+  }, [resolvedDetailPath, detail]);
 
   useEffect(() => {
     if (initialRecommendations.length > 0) {

@@ -8,10 +8,12 @@ import { apiServer } from "@/lib/api/server";
 import { breadcrumbJsonLd, episodeJsonLd, movieJsonLd, tvSeriesJsonLd } from "@/lib/seo/jsonld";
 import { buildCanonical, toAbsoluteUrl } from "@/lib/seo/urls";
 
+type DetailPageParams = {
+  detailPath: string;
+};
+
 type DetailPageProps = {
-  params: {
-    detailPath: string;
-  };
+  params: DetailPageParams | Promise<DetailPageParams>;
 };
 
 const buildTitle = (detailPath: string) => {
@@ -42,11 +44,12 @@ export async function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: DetailPageProps): Promise<Metadata> {
+  const { detailPath } = await params;
   const appName = process.env.APP_NAME || process.env.NEXT_PUBLIC_APP_NAME || "Rebahan";
-  const decodedPath = decodeURIComponent(params.detailPath);
+  const decodedPath = decodeURIComponent(detailPath);
   const encodedPath = encodeURIComponent(decodedPath);
   const catalogItem = getTitleBySlug(decodedPath);
-  let title = buildTitle(params.detailPath);
+  let title = buildTitle(detailPath);
   let description = title === "Detail" ? `Streaming detail page on ${appName}.` : `Watch ${title} on ${appName}.`;
   let ogImage: string | undefined;
   let canonical = buildCanonical(`/detail/${encodedPath}`);
@@ -91,8 +94,15 @@ export async function generateMetadata({ params }: DetailPageProps): Promise<Met
   };
 }
 
+const normalizeDetail = (value: any) => {
+  if (!value || typeof value !== "object") return null;
+  if (!value.title) return null;
+  return value;
+};
+
 const DetailPage = async ({ params }: DetailPageProps) => {
-  const decodedPath = decodeURIComponent(params.detailPath);
+  const { detailPath } = await params;
+  const decodedPath = decodeURIComponent(detailPath);
   const catalogItem = getTitleBySlug(decodedPath);
   if (catalogItem?.status === "removed") {
     notFound();
@@ -100,10 +110,15 @@ const DetailPage = async ({ params }: DetailPageProps) => {
 
   let initialDetail = null;
   let initialRecommendations: any[] = [];
+  let shouldNotFound = false;
 
   try {
     const detailResponse = await apiServer.getDetail(decodedPath);
-    initialDetail = detailResponse?.data || detailResponse?.items?.[0] || detailResponse || null;
+    const candidate = detailResponse?.data || detailResponse?.items?.[0] || null;
+    initialDetail = normalizeDetail(candidate);
+    if (!initialDetail && (detailResponse?.error || detailResponse?.message)) {
+      shouldNotFound = true;
+    }
   } catch {
     initialDetail = null;
   }
@@ -116,7 +131,7 @@ const DetailPage = async ({ params }: DetailPageProps) => {
     initialRecommendations = [];
   }
 
-  if (!initialDetail && !catalogItem) {
+  if (shouldNotFound && !catalogItem) {
     notFound();
   }
 
@@ -139,7 +154,7 @@ const DetailPage = async ({ params }: DetailPageProps) => {
     });
   }
 
-  const displayTitle = catalogItem?.title || initialDetail?.title || buildTitle(params.detailPath);
+  const displayTitle = catalogItem?.title || initialDetail?.title || buildTitle(detailPath);
   breadcrumbItems.push({ name: displayTitle, url: buildCanonical(`/detail/${encodeURIComponent(decodedPath)}`) });
   breadcrumbLinks.push({ label: displayTitle });
 
@@ -184,10 +199,10 @@ const DetailPage = async ({ params }: DetailPageProps) => {
         <Breadcrumbs items={breadcrumbLinks} />
       </div>
       <DetailClient
-        detailPath={params.detailPath}
+        detailPath={detailPath}
         initialDetail={initialDetail}
         initialRecommendations={initialRecommendations}
-        initialDetailPath={params.detailPath}
+        initialDetailPath={detailPath}
       />
       {catalogItem && <RelatedTitles slug={catalogItem.slug} />}
     </>
