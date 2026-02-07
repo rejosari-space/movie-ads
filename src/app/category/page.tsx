@@ -17,11 +17,12 @@ const parsePageValue = (value?: string | string[]) => {
 export async function generateMetadata({
   searchParams,
 }: {
-  searchParams?: { page?: string };
+  searchParams?: { page?: string } | Promise<{ page?: string }>;
 }): Promise<Metadata> {
   const title = `Trending | ${appName}`;
   const description = `Browse trending movies and series on ${appName}.`;
-  const page = parsePageValue(searchParams?.page);
+  const resolvedSearchParams = await searchParams;
+  const page = parsePageValue(resolvedSearchParams?.page);
   const canonical = buildCanonical("/category");
   const ogImage = toAbsoluteUrl(getDefaultOgImage());
 
@@ -49,11 +50,12 @@ export async function generateMetadata({
 }
 
 type CategoryIndexPageProps = {
-  searchParams?: { page?: string };
+  searchParams?: { page?: string } | Promise<{ page?: string }>;
 };
 
 const CategoryIndexPage = async ({ searchParams }: CategoryIndexPageProps) => {
-  const page = parsePageValue(searchParams?.page);
+  const resolvedSearchParams = await searchParams;
+  const page = parsePageValue(resolvedSearchParams?.page);
   let items: any[] = [];
   let hasMore = false;
 

@@ -7,9 +7,13 @@ import { breadcrumbJsonLd } from "@/lib/seo/jsonld";
 import { buildCanonical, toAbsoluteUrl } from "@/lib/seo/urls";
 
 type CategoryPageProps = {
-  params: {
-    category: string;
-  };
+  params:
+    | {
+        category: string;
+      }
+    | Promise<{
+        category: string;
+      }>;
 };
 
 const categoryLabels: Record<string, string> = {
@@ -51,13 +55,17 @@ const parsePageValue = (value?: string | string[]) => {
 export async function generateMetadata({
   params,
   searchParams,
-}: CategoryPageProps & { searchParams?: { page?: string } }): Promise<Metadata> {
+}: CategoryPageProps & {
+  searchParams?: { page?: string } | Promise<{ page?: string }>;
+}): Promise<Metadata> {
   const appName = process.env.APP_NAME || process.env.NEXT_PUBLIC_APP_NAME || "Rebahan";
-  const label = formatCategory(params.category);
+  const resolvedParams = await params;
+  const resolvedSearchParams = await searchParams;
+  const label = formatCategory(resolvedParams.category);
   const title = `${label} | ${appName}`;
   const description = `Browse ${label} content on ${appName}.`;
-  const page = parsePageValue(searchParams?.page);
-  const canonicalBase = buildCanonical(`/category/${params.category}`);
+  const page = parsePageValue(resolvedSearchParams?.page);
+  const canonicalBase = buildCanonical(`/category/${resolvedParams.category}`);
   const canonical = page > 1 ? canonicalBase : canonicalBase;
   const ogImage = toAbsoluteUrl(getDefaultOgImage());
 
@@ -85,12 +93,14 @@ export async function generateMetadata({
 }
 
 type CategoryPageRouteProps = CategoryPageProps & {
-  searchParams?: { page?: string };
+  searchParams?: { page?: string } | Promise<{ page?: string }>;
 };
 
 const CategoryPage = async ({ params, searchParams }: CategoryPageRouteProps) => {
-  const page = parsePageValue(searchParams?.page);
-  const category = params.category;
+  const resolvedParams = await params;
+  const resolvedSearchParams = await searchParams;
+  const page = parsePageValue(resolvedSearchParams?.page);
+  const category = resolvedParams.category;
   let items: any[] = [];
   let hasMore = false;
 
