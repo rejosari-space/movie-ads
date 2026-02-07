@@ -36,7 +36,7 @@ const PrePlayGate = ({ open, onSkip, onAffiliateClick }: PrePlayGateProps) => {
         }}
       >
         <div style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>
-          Affiliate link
+          Watch now
         </div>
         <div style={{ marginTop: "16px", display: "grid", gap: "10px" }}>
           <button className="btn btn-primary" type="button" onClick={onSkip}>
@@ -46,7 +46,11 @@ const PrePlayGate = ({ open, onSkip, onAffiliateClick }: PrePlayGateProps) => {
             className="btn"
             type="button"
             onClick={onAffiliateClick}
-            style={{ background: "transparent", border: "1px solid rgba(255,255,255,0.2)", color: "white" }}
+            style={{
+              background: "transparent",
+              border: "1px solid rgba(255,255,255,0.2)",
+              color: "white",
+            }}
           >
             Open
           </button>

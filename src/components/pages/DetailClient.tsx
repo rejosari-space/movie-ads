@@ -5,10 +5,10 @@ import { useParams } from "next/navigation";
 import Image from "next/image";
 import { Calendar, Film, Star } from "lucide-react";
 import AdSlot from "@/components/ads/AdSlot";
-import PrePlayGate from "@/components/affiliate/PrePlayGate";
 import MovieCard from "@/components/common/MovieCard";
 import DetailSkeleton from "@/components/common/DetailSkeleton";
 import VideoPlayer from "@/components/player/VideoPlayer";
+import { triggerPopunder } from "@/lib/ads/popunder";
 
 type DetailClientProps = {
   detailPath?: string | null;
@@ -41,10 +41,6 @@ const DetailClient = ({
   const [activeSeason, setActiveSeason] = useState(1);
   const [currentVideoUrl, setCurrentVideoUrl] = useState<string | null>(null);
   const [recommendations, setRecommendations] = useState<any[]>(initialRecommendations);
-  const [gateOpen, setGateOpen] = useState(false);
-  const [pendingUrl, setPendingUrl] = useState<string | null>(null);
-  const [pendingType, setPendingType] = useState<"movie" | "series">("movie");
-  const [pendingSeriesId, setPendingSeriesId] = useState<string | null>(null);
   const lastFetchRef = useRef<string | null>(null);
 
   const hasInitial = Boolean(initialDetail) && initialDetailPath === resolvedDetailPath;
@@ -139,7 +135,7 @@ const DetailClient = ({
     }
   };
 
-  const shouldShowGate = (contentType: "movie" | "series", seriesKey?: string | null) => {
+  const shouldTriggerPopunder = (contentType: "movie" | "series", seriesKey?: string | null) => {
     if (contentType === "movie") return true;
     if (!seriesKey) return true;
     const key = `shopee_episode_count_${seriesKey}`;
@@ -160,37 +156,12 @@ const DetailClient = ({
       return;
     }
 
-    const showGate = shouldShowGate(contentType, seriesKey);
-    if (showGate) {
-      setPendingUrl(url);
-      setPendingType(contentType);
-      setPendingSeriesId(seriesKey ?? null);
-      setGateOpen(true);
-      return;
+    const shouldPopunder = shouldTriggerPopunder(contentType, seriesKey);
+    if (shouldPopunder) {
+      triggerPopunder();
     }
 
     setCurrentVideoUrl(url);
-  };
-
-  const handleGateSkip = () => {
-    setGateOpen(false);
-    if (pendingUrl) {
-      setCurrentVideoUrl(pendingUrl);
-    }
-    setPendingUrl(null);
-  };
-
-  const handleAffiliateClick = () => {
-    window.open(
-      "/go/shopee?item=DEFAULT_HIGH_COMMISSION&slot=preplay",
-      "_blank",
-      "noopener,noreferrer"
-    );
-    setGateOpen(false);
-    if (pendingUrl) {
-      setCurrentVideoUrl(pendingUrl);
-    }
-    setPendingUrl(null);
   };
 
   const handleMoviePlay = () => {
@@ -387,7 +358,6 @@ const DetailClient = ({
         </div>
       )}
 
-      <PrePlayGate open={gateOpen} onSkip={handleGateSkip} onAffiliateClick={handleAffiliateClick} />
     </div>
   );
 };
