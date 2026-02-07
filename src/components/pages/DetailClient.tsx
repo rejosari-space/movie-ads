@@ -323,7 +323,7 @@ const DetailClient = ({
           className="detailPoster"
           width={500}
           height={750}
-          sizes="(max-width: 768px) 60vw, 250px"
+          sizes="(max-width: 768px) 70vw, 250px"
           priority
         />
         <div className="detailInfo">

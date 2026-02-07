@@ -836,6 +836,8 @@ img {
 
 .detailPoster {
   width: 250px;
+  height: auto;
+  object-fit: contain;
   border-radius: var(--border-radius);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
   flex-shrink: 0;
@@ -962,7 +964,9 @@ img {
   }
 
   .detailPoster {
-    width: 180px;
+    width: 70vw;
+    max-width: 280px;
+    height: auto;
   }
 
   .detailTitle {
