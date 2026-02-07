@@ -1,12 +1,38 @@
 const DEFAULT_SITE_URL = "https://example.com";
 
+const toBoolean = (value?: string) => value === "true";
+const FORCE_WWW = toBoolean(process.env.NEXT_PUBLIC_FORCE_WWW);
+
+const shouldSkipWww = (hostname: string) => {
+  if (!hostname) return true;
+  if (hostname === "localhost" || hostname.endsWith(".localhost")) return true;
+  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(hostname)) return true;
+  if (hostname.includes(":")) return true;
+  return false;
+};
+
+const ensureWwwOrigin = (origin: string) => {
+  if (!FORCE_WWW) return origin;
+  try {
+    const url = new URL(origin);
+    const host = url.hostname;
+    if (shouldSkipWww(host)) return origin;
+    if (host.startsWith("www.")) return origin;
+    url.hostname = `www.${host}`;
+    return url.origin;
+  } catch {
+    return origin;
+  }
+};
+
 export const getSiteUrl = () =>
   process.env.NEXT_PUBLIC_SITE_URL || DEFAULT_SITE_URL;
 
 export const getSiteOrigin = () => {
   const siteUrl = getSiteUrl();
   try {
-    return new URL(siteUrl).origin;
+    const origin = new URL(siteUrl).origin;
+    return ensureWwwOrigin(origin);
   } catch {
     return DEFAULT_SITE_URL;
   }
